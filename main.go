@@ -1,33 +1,31 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/stianeikeland/go-rpio"
-	"os"
-	"time"
-)
-
-var (
-	// mcu pin 10 corresponds to physical pin 19.
-	pin = rpio.Pin(10)
+	"log"
+	"os/exec"
+	"regexp"
+	"strconv"
 )
 
 func main() {
-	err := rpio.Open()
+	// TODO: Get the device ID dynamically.
+	out, err := exec.Command("cat", "/sys/bus/w1/devices/28-0414703e47ff/w1_slave").Output()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	defer rpio.Close()
-
-	pin.Output()
-
-	for x := 0; x < 20; x++ {
-		fmt.Print(".")
-		pin.Toggle()
-		time.Sleep(time.Second / 5)
+		log.Fatal(err)
 	}
 
-	fmt.Println("")
-	fmt.Println("Done")
+	s := bytes.NewBuffer(out).String()
+
+	pattern := regexp.MustCompile("t=(\\d+)")
+	matches := pattern.FindStringSubmatch(s)
+	log.Println(matches[1])
+	temperature, err := strconv.ParseFloat(matches[1], 32)
+	if err != nil {
+		log.Fatal(err)
+	}
+	temperature = temperature / 1000
+
+	fmt.Printf("Temperature: %f", temperature)
 }
