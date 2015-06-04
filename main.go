@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -19,6 +20,11 @@ type Datapoint struct {
 }
 
 func main() {
+	if len(os.Args) < 2 {
+		log.Fatal("Specify channel ID as an argument.")
+	}
+	channelId := os.Args[1]
+
 	temperature, err := readTemperature()
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +33,7 @@ func main() {
 	fmt.Printf("Temperature: %f\n", temperature)
 
 	// TODO: Pass channel ID as an argument.
-	err = sendTemperature("556a961004957c0003000001", temperature)
+	err = sendTemperature(channelId, temperature)
 	if err != nil {
 		log.Fatal(err)
 	}

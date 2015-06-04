@@ -4,6 +4,14 @@ Data uploader for beerserver.
 
 ## Usage
 
+Compile and install:
+
 ```
-go install && keg
+go install
+```
+
+Upload temperature to a channel:
+
+```
+keg {channel-id}
 ```
