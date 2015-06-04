@@ -8,7 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
+        "path/filepath"
+        "errors"
 	"regexp"
 	"strconv"
 	"time"
@@ -40,12 +41,15 @@ func main() {
 }
 
 func readTemperature() (float32, error) {
-	// TODO: Get the device ID dynamically.
-	out, err := exec.Command("cat", "/sys/bus/w1/devices/28-0414703e47ff/w1_slave").Output()
+	thermDevice, err := getThermDevice("/sys/bus/w1/devices")
 	if err != nil {
 		return 0, err
 	}
-	s := bytes.NewBuffer(out).String()
+	dat, err := ioutil.ReadFile(thermDevice)
+	if err != nil {
+		return 0, err
+	}
+	s := string(dat)
 
 	pattern := regexp.MustCompile("t=(\\d+)")
 	matches := pattern.FindStringSubmatch(s)
@@ -87,3 +91,24 @@ func sendTemperature(channelId string, temperature float32) error {
 
 	return nil
 }
+
+func getThermDevice(baseDir string) (devPath string, err error) {
+        subDirInfos, err := ioutil.ReadDir(baseDir)
+        if err != nil {
+                return "", err
+        }
+
+        for _, fileInfo := range subDirInfos {
+                var subDir = filepath.Join(baseDir, (fileInfo).Name())
+                dirInfo, err := os.Stat(subDir)
+                if err == nil && dirInfo.IsDir() {
+                        var devfile = filepath.Join(subDir, "w1_slave")
+                        _, err := os.Stat(devfile)
+                        if !os.IsNotExist(err) {
+                                return devfile, nil
+                        }
+                }
+        }
+        return "", errors.New("w1_slave is not found.")
+}
+
