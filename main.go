@@ -31,8 +31,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Temperature: %f\n", temperature)
-
 	// TODO: Pass channel ID as an argument.
 	err = sendTemperature(channelId, temperature)
 	if err != nil {
@@ -63,7 +61,6 @@ func readTemperature() (float32, error) {
 
 func sendTemperature(channelId string, temperature float32) error {
 	url := "http://beergarden.herokuapp.com/channels/" + channelId + "/datapoints"
-	log.Println(url)
 
 	marshaled, err := json.Marshal(&Datapoint{time.Now(), temperature})
 	if err != nil {
@@ -84,10 +81,9 @@ func sendTemperature(channelId string, temperature float32) error {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("Response status:", resp.Status)
-	fmt.Println("Response headers:", resp.Header)
+	log.Println("Response status:", resp.Status)
 	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("Response body:", string(body))
+	log.Println("Response body:", string(body))
 
 	return nil
 }
